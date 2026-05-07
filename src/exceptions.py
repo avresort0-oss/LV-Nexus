@@ -7,6 +7,7 @@ This ensures that errors bubble up safely and can be displayed to the user
 via the UI bridge with precise, human-readable messages.
 """
 
+
 class LVNexusError(Exception):
     """Base exception for all LV Nexus specific errors."""
     def __init__(self, message: str = "An internal engine error occurred."):
