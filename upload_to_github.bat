@@ -1,58 +1,33 @@
 @echo off
 color 0A
 echo ===================================================
-echo     LV Nexus - Auto GitHub Uploader (Premium)
+echo     LV Nexus - Premium GitHub Uploader
 echo ===================================================
 echo.
 
-:: Check if git is installed
-git --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Git is not installed! Download from https://git-scm.com/downloads
-    pause
-    exit /b
-)
-
-:: Setup Git commit
-echo [*] Setting up Git...
+:: Setup Git
 git add .
 git commit -m "🚀 Initial Release: LV Nexus v2.1.0 - Premium Edition" >nul 2>&1
 git branch -M main >nul 2>&1
 
-:: Check if GitHub CLI (gh) is installed
-gh --version >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [*] GitHub CLI detected! Creating repository automatically...
-    echo [*] Checking authentication...
-    gh auth status >nul 2>&1
-    if %errorlevel% neq 0 (
-        echo [!] You are not logged into GitHub CLI. 
-        echo [!] Please run this command first: gh auth login
-        pause
-        exit /b
-    )
-    
-    echo [*] Creating 'LV-Nexus' repository and uploading...
-    gh repo create LV-Nexus --public --source=. --remote=origin --push
-    
-    if %errorlevel% equ 0 (
-        echo ===================================================
-        echo     SUCCESS! Automatically uploaded to your GitHub!
-        echo ===================================================
-        pause
-        exit /b
-    )
-)
+echo [*] Opening your browser to create a new repository...
+timeout /t 2 >nul
+start https://github.com/new
 
-:: Fallback if GitHub CLI is not installed or failed
 echo.
-echo [!] GitHub CLI not found or failed. We will use the direct URL method.
-echo [!] Please go to https://github.com/new and create an empty repository named 'LV-Nexus'
+echo ===================================================
+echo 1. Your browser should now be open on GitHub.
+echo 2. Make sure you are logged into 'avresort0-oss'.
+echo 3. Enter 'LV-Nexus' as the Repository Name.
+echo 4. Click "Create repository" at the bottom.
+echo 5. Copy the link (e.g. https://github.com/avresort0-oss/LV-Nexus.git)
+echo ===================================================
 echo.
-set /p REPO_URL="Enter your EXACT GitHub Repository URL (e.g. https://github.com/avresort0-oss/LV-Nexus.git): "
+
+set /p REPO_URL="Paste your GitHub Link here and press Enter: "
 
 if "%REPO_URL%"=="" (
-    echo [ERROR] You didn't enter a URL! Please try again and paste the link.
+    echo [ERROR] You didn't enter a link! Please run the file again.
     pause
     exit /b
 )
@@ -61,7 +36,7 @@ echo [*] Linking to GitHub...
 git remote remove origin >nul 2>&1
 git remote add origin %REPO_URL%
 
-echo [*] Uploading to GitHub (Please wait)...
+echo [*] Uploading your project...
 git push -u origin main
 
 if %errorlevel% equ 0 (
@@ -70,7 +45,7 @@ if %errorlevel% equ 0 (
     echo ===================================================
 ) else (
     echo ===================================================
-    echo     FAILED! Make sure the repository exists on GitHub.
+    echo     FAILED! Make sure the link is correct.
     echo ===================================================
 )
 pause
