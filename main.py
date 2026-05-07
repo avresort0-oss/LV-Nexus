@@ -65,11 +65,11 @@ def setup_global_logging() -> logging.Logger:
         return logger
 
     # Path resolution for Logs
-    log_dir = os.path.join(os.environ.get('LOCALAPPDATA', '.'), 'LV_Nexus', 'Logs')
+    log_dir = os.path.join(base_path if 'base_path' in locals() else '.', 'logs')
     os.makedirs(log_dir, exist_ok=True)
     
     # File Handler
-    fh = logging.FileHandler(os.path.join(log_dir, 'runtime.log'), encoding='utf-8')
+    fh = logging.FileHandler(os.path.join(log_dir, 'app.log'), encoding='utf-8')
     fh.setLevel(logging.DEBUG)
     
     # Stream Handler
