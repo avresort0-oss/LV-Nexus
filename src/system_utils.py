@@ -220,90 +220,116 @@ class SystemUtils:
         apps: List[Dict[str, str]] = []
         _PATHS = [
             (r"Software\Microsoft\Windows\CurrentVersion\Run", False),
-            (r"Software\Microsoft\Windows\CurrentVersion\RunOnce", True)
+            (r"Software\Microsoft\Windows\CurrentVersion\RunOnce", True),
         ]
 
         # 1. Registry Scan
         for path, is_once in _PATHS:
             # HKCU
-            apps.extend(SystemUtils._scan_reg_startup(winreg.HKEY_CURRENT_USER, path, False, is_once))
+            apps.extend(
+                SystemUtils._scan_reg_startup(
+                    winreg.HKEY_CURRENT_USER, path, False, is_once
+                )
+            )
             # HKLM
-            apps.extend(SystemUtils._scan_reg_startup(winreg.HKEY_LOCAL_MACHINE, path, True, is_once))
+            apps.extend(
+                SystemUtils._scan_reg_startup(
+                    winreg.HKEY_LOCAL_MACHINE, path, True, is_once
+                )
+            )
 
         # 2. Startup Folder Scan
-        startup_folder = os.path.join(os.environ.get('APPDATA', ''), r"Microsoft\Windows\Start Menu\Programs\Startup")
+        startup_folder = os.path.join(
+            os.environ.get("APPDATA", ""),
+            r"Microsoft\Windows\Start Menu\Programs\Startup",
+        )
         if os.path.exists(startup_folder):
-            for f in os.listdir(startup_folder):
-                if f.lower().endswith(".lnk"):
-                    apps.append({
-                        "name": f.replace(".lnk", ""),
-                        "path": os.path.join(startup_folder, f),
-                        "folder": "true"
-                    })
+            for filename in os.listdir(startup_folder):
+                if filename.lower().endswith(".lnk"):
+                    apps.append(
+                        {
+                            "name": filename.replace(".lnk", ""),
+                            "path": os.path.join(startup_folder, filename),
+                            "folder": "true",
+                        }
+                    )
 
         return apps
 
     @staticmethod
-    def _scan_reg_startup(hive, path: str, is_hklm: bool, is_once: bool) -> List[Dict[str, str]]:
-        results = []
+    def _scan_reg_startup(
+        hive, path: str, is_hklm: bool, is_once: bool
+    ) -> List[Dict[str, str]]:
+        """Scan a registry hive for startup entries."""
+        results: List[Dict[str, str]] = []
         try:
             with winreg.OpenKey(hive, path, 0, winreg.KEY_READ) as key:
                 idx = 0
                 while True:
                     try:
                         name, value, _ = winreg.EnumValue(key, idx)
-                        entry = {"name": name, "path": value}
-                        if is_hklm: entry["hklm"] = "true"
-                        if is_once: entry["once"] = "true"
+                        entry: Dict[str, str] = {"name": name, "path": value}
+                        if is_hklm:
+                            entry["hklm"] = "true"
+                        if is_once:
+                            entry["once"] = "true"
                         results.append(entry)
                         idx += 1
-                    except OSError: break
-        except Exception: pass
+                    except OSError:
+                        break
+        except Exception:
+            pass
         return results
 
     @staticmethod
-    def remove_startup_app(name: str, is_hklm: bool = False, is_once: bool = False, is_folder: bool = False) -> bool:
-        """Removes a startup entry from Registry or Startup Folder."""
-        if is_folder:
-            try:
-                startup_folder = os.path.join(os.environ.get('APPDATA', ''), r"Microsoft\Windows\Start Menu\Programs\Startup")
-                path = os.path.join(startup_folder, name + ".lnk")
-                if os.path.exists(path):
-                    os.remove(path)
-                    return True
-            except Exception: return False
-
-        hive = winreg.HKEY_LOCAL_MACHINE if is_hklm else winreg.HKEY_CURRENT_USER
-        path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        if is_once: path += "Once"
-        
-        try:
-            with winreg.OpenKey(hive, path, 0, winreg.KEY_SET_VALUE) as key:
-                winreg.DeleteValue(key, name)
-                return True
-        except Exception: return False
-
-        _read_hive(winreg.HKEY_CURRENT_USER, "HKCU", False)
-        _read_hive(winreg.HKEY_LOCAL_MACHINE, "HKLM", True)
-        logger.debug("Startup apps found: %d total.", len(apps))
-        return apps
-
-    @staticmethod
-    def remove_startup_app(name: str, is_hklm: bool = False) -> bool:
-        """Remove a startup registry entry.
+    def remove_startup_app(
+        name: str,
+        is_hklm: bool = False,
+        is_once: bool = False,
+        is_folder: bool = False,
+    ) -> bool:
+        """Remove a startup entry from Registry or Startup Folder.
 
         Args:
-            name:    The value name to delete from the Run key.
-            is_hklm: If ``True``, target ``HKLM``; otherwise ``HKCU``.
+            name:     The value name to delete from the Run key or .lnk filename.
+            is_hklm:  If ``True``, target ``HKLM``; otherwise ``HKCU``.
+            is_once:  If ``True``, target the ``RunOnce`` key instead of ``Run``.
+            is_folder: If ``True``, treat ``name`` as a shortcut in Startup folder.
 
         Returns:
             bool: ``True`` on success, ``False`` on any failure.
         """
-        _RUN_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        # --- Startup Folder removal ---
+        if is_folder:
+            try:
+                startup_folder = os.path.join(
+                    os.environ.get("APPDATA", ""),
+                    r"Microsoft\Windows\Start Menu\Programs\Startup",
+                )
+                link_path = os.path.join(startup_folder, f"{name}.lnk")
+                if os.path.exists(link_path):
+                    os.remove(link_path)
+                    logger.info("Startup shortcut removed: %s", name)
+                    return True
+                logger.warning("Startup shortcut not found: %s", name)
+                return False
+            except OSError as exc:
+                logger.error("OS error removing startup shortcut [%s]: %s", name, exc)
+                return False
+            except Exception as exc:
+                logger.error("Unexpected error removing startup shortcut [%s]: %s", name, exc)
+                return False
+
+        # --- Registry removal ---
+        run_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        if is_once:
+            run_path += "Once"
+
         root = winreg.HKEY_LOCAL_MACHINE if is_hklm else winreg.HKEY_CURRENT_USER
         hive_label = "HKLM" if is_hklm else "HKCU"
+
         try:
-            key = winreg.OpenKey(root, _RUN_PATH, 0, winreg.KEY_SET_VALUE)
+            key = winreg.OpenKey(root, run_path, 0, winreg.KEY_SET_VALUE)
             winreg.DeleteValue(key, name)
             winreg.CloseKey(key)
             logger.info("Startup entry removed from %s: %s", hive_label, name)
@@ -319,7 +345,7 @@ class SystemUtils:
         except OSError as exc:
             logger.error("OS error removing startup entry [%s]: %s", name, exc)
             return False
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:
             logger.error("Unexpected error removing startup entry [%s]: %s", name, exc)
             return False
 
@@ -327,33 +353,48 @@ class SystemUtils:
     #  Process Priority Manager
     # ------------------------------------------------------------------ #
 
-    # Windows PROCESS priority class constants (used with OpenProcess / SetPriorityClass)
+    # Windows PROCESS priority class constants
+    # (used with OpenProcess / SetPriorityClass)
     _PRIORITY_MAP: Dict[str, int] = {
-        "realtime":     0x00000100,
-        "high":         0x00000080,
+        "realtime": 0x00000100,
+        "high": 0x00000080,
         "above_normal": 0x00008000,
-        "normal":       0x00000020,
+        "normal": 0x00000020,
         "below_normal": 0x00004000,
-        "low":          0x00000040,
+        "low": 0x00000040,
     }
 
     # Human-readable labels for each psutil priority class integer
     _PRIORITY_LABEL: Dict[int, str] = {
-        psutil.REALTIME_PRIORITY_CLASS:     "Realtime",
-        psutil.HIGH_PRIORITY_CLASS:         "High",
+        psutil.REALTIME_PRIORITY_CLASS: "Realtime",
+        psutil.HIGH_PRIORITY_CLASS: "High",
         psutil.ABOVE_NORMAL_PRIORITY_CLASS: "Above Normal",
-        psutil.NORMAL_PRIORITY_CLASS:       "Normal",
+        psutil.NORMAL_PRIORITY_CLASS: "Normal",
         psutil.BELOW_NORMAL_PRIORITY_CLASS: "Below Normal",
-        psutil.IDLE_PRIORITY_CLASS:         "Low",
+        psutil.IDLE_PRIORITY_CLASS: "Low",
     }
 
     # Apps that should receive a special highlight in the UI
-    SPECIAL_APPS: frozenset = frozenset({
-        "cursor.exe", "code.exe", "chrome.exe", "valorant.exe",
-        "vgc.exe", "cs2.exe", "steam.exe", "pycharm64.exe",
-        "idea64.exe", "firefox.exe", "msedge.exe", "obs64.exe",
-        "zed.exe", "windsurf.exe", "blackbox.exe", "explorer.exe",
-    })
+    SPECIAL_APPS: frozenset = frozenset(
+        {
+            "cursor.exe",
+            "code.exe",
+            "chrome.exe",
+            "valorant.exe",
+            "vgc.exe",
+            "cs2.exe",
+            "steam.exe",
+            "pycharm64.exe",
+            "idea64.exe",
+            "firefox.exe",
+            "msedge.exe",
+            "obs64.exe",
+            "zed.exe",
+            "windsurf.exe",
+            "blackbox.exe",
+            "explorer.exe",
+        }
+    )
 
     @staticmethod
     def get_process_list() -> List[Dict[str, Any]]:
