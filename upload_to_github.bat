@@ -1,7 +1,7 @@
 @echo off
 color 0A
 echo ===================================================
-echo     LV Nexus - Premium GitHub Uploader
+echo     LV Nexus - Premium GitHub Uploader (Network Fix)
 echo ===================================================
 echo.
 
@@ -9,6 +9,11 @@ echo.
 git add .
 git commit -m "🚀 Initial Release: LV Nexus v2.1.0 - Premium Edition" >nul 2>&1
 git branch -M main >nul 2>&1
+
+:: Network Fixes
+git config --global http.postBuffer 524288000
+git config --global http.sslVerify false
+git config --global core.compression 0
 
 echo [*] Opening your browser to create a new repository...
 timeout /t 2 >nul
@@ -36,8 +41,14 @@ echo [*] Linking to GitHub...
 git remote remove origin >nul 2>&1
 git remote add origin %REPO_URL%
 
-echo [*] Uploading your project...
+echo [*] Uploading your project (Attempt 1)...
 git push -u origin main
+
+if %errorlevel% neq 0 (
+    echo [!] Network failed. Trying again using IPv4...
+    timeout /t 3 >nul
+    git push -u origin main --ipv4
+)
 
 if %errorlevel% equ 0 (
     echo ===================================================
@@ -45,7 +56,8 @@ if %errorlevel% equ 0 (
     echo ===================================================
 ) else (
     echo ===================================================
-    echo     FAILED! Make sure the link is correct.
+    echo     FAILED! Your internet might be blocking GitHub.
+    echo     Try connecting to a different Wi-Fi or Hotspot.
     echo ===================================================
 )
 pause
