@@ -19,6 +19,7 @@ import json
 from typing import Dict, Any, Optional
 from .core_engine import OptimizerCore, Config
 from .system_utils import SystemUtils
+from .exceptions import LVNexusError
 
 logger = logging.getLogger("LV_Nexus")
 
@@ -89,7 +90,12 @@ class OptimizerApi:
 
     def trigger_deep_optimize(self) -> str:
         """Starts a full system optimization in a background thread."""
-        self.opt.executor.submit(self.opt.deep_optimize, self.update_progress)
+        def _run():
+            try:
+                self.opt.deep_optimize(self.update_progress)
+            except LVNexusError as e:
+                self.notify("System Error", str(e), "error")
+        self.opt.executor.submit(_run)
         return "STARTED"
 
     def apply_profile(self, profile: str) -> str:

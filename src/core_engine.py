@@ -39,6 +39,7 @@ except ImportError:
 
 from .system_utils import SystemUtils
 from .backup_manager import BackupManager
+from .exceptions import OptimizationError, BackupRestoreError, ElevationRequiredError
 
 logger = logging.getLogger("LV_Nexus")
 
@@ -451,6 +452,8 @@ class OptimizerCore:
 
             except Exception as e:
                 logger.error(f"Auto-Pilot Exception: {e}")
+                # We do not raise OptimizationError here as this is a background daemon
+                # and should not crash the thread.
 
             time.sleep(5)
 
@@ -597,8 +600,9 @@ class OptimizerCore:
             ui_log("Restore point created successfully.", "SAFE")
             return True
         except Exception as e:
-            ui_log(f"Restore Point failed: {e}", "ERR", logging.ERROR)
-            return False
+            msg = f"Restore Point failed: {e}"
+            ui_log(msg, "ERR", logging.ERROR)
+            raise BackupRestoreError("Create Restore Point", str(e)) from e
 
     def quick_boost(self, progress_callback: Optional[Any] = None) -> None:
         """Non-destructive, fast optimization sequence."""
@@ -618,9 +622,10 @@ class OptimizerCore:
     def deep_optimize(self, progress_callback: Optional[Any] = None) -> None:
         """Comprehensive kernel and registry hardening protocol."""
         if not self.is_admin:
-            ui_log("Access Denied: Deep Optimization requires Administrator rights.", "ERR", logging.ERROR)
+            msg = "Access Denied: Deep Optimization requires Administrator rights."
+            ui_log(msg, "ERR", logging.ERROR)
             if progress_callback: progress_callback(0, "Permission Error")
-            return
+            raise ElevationRequiredError(msg)
 
         ui_log("Initiating Master Optimization Protocol...", "KERN")
         
