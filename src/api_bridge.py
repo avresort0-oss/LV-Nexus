@@ -14,23 +14,30 @@ Features:
   - Advanced Process Priority Manager endpoints
 """
 
-import logging
+from __future__ import annotations
+
 import json
-from typing import Dict, Any, Optional
-from .core_engine import OptimizerCore, Config
-from .system_utils import SystemUtils
+import logging
+from typing import TYPE_CHECKING, Any, Dict
+
+from .core_engine import OptimizerCore
 from .exceptions import LVNexusError
+from .system_utils import SystemUtils
+
+if TYPE_CHECKING:
+    from webview import Window
 
 logger = logging.getLogger("LV_Nexus")
 
+
 class OptimizerApi:
     """API endpoints exposed to the webview frontend."""
-    
-    def __init__(self, optimizer: OptimizerCore):
-        self.opt = optimizer
-        self._window = None
 
-    def set_window(self, window) -> None:
+    def __init__(self, optimizer: OptimizerCore) -> None:
+        self.opt = optimizer
+        self._window: Window | None = None
+
+    def set_window(self, window: Window) -> None:
         """Attaches the webview window instance for JS evaluation."""
         self._window = window
 
@@ -60,11 +67,11 @@ class OptimizerApi:
     def get_info(self) -> Dict[str, Any]:
         """Returns static application and hardware info."""
         return {
-            'cpu_name': self.opt.cpu_name,
-            'total_ram': self.opt.total_ram,
-            'ver': self.opt.ver,
-            'status': self.opt.status,
-            'is_admin': self.opt.is_admin
+            "cpu_name": self.opt.cpu_name,
+            "total_ram": self.opt.total_ram,
+            "ver": self.opt.ver,
+            "status": self.opt.status,
+            "is_admin": self.opt.is_admin,
         }
 
     def get_telemetry(self) -> Dict[str, Any]:
@@ -90,11 +97,13 @@ class OptimizerApi:
 
     def trigger_deep_optimize(self) -> str:
         """Starts a full system optimization in a background thread."""
+
         def _run():
             try:
                 self.opt.deep_optimize(self.update_progress)
             except LVNexusError as e:
                 self.notify("System Error", str(e), "error")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
@@ -116,13 +125,15 @@ class OptimizerApi:
 
     def trigger_shell_restart(self) -> str:
         """Restarts explorer.exe to apply UI tweaks."""
+
         def _restart():
             SystemUtils.execute("taskkill /f /im explorer.exe")
             import time
+
             time.sleep(1)
             SystemUtils.execute("start explorer.exe")
             self.notify("Shell Refreshed", "Windows Explorer has been restarted.", "info")
-        
+
         self.opt.executor.submit(_restart)
         return "OK"
 
@@ -152,9 +163,11 @@ class OptimizerApi:
 
     def trigger_deep_purge(self) -> str:
         """Stand-alone deep system cleanup."""
+
         def _run():
             self.opt.surgical_purge(self.update_progress)
             self.notify("Purge Complete", "System caches and temporary files sanitized.", "success")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
@@ -166,15 +179,15 @@ class OptimizerApi:
 
     def run_deep_clean(self, category_ids: list) -> str:
         """Execute deep clean for the specified category IDs."""
+
         def _run():
             result = self.opt.run_deep_clean(category_ids, self.update_progress)
             label = result.get("freed_label", "0 MB")
             cats = len(result.get("categories", []))
             self.notify(
-                "🧹 Deep Clean Complete",
-                f"Freed {label} across {cats} categories.",
-                "success"
+                "🧹 Deep Clean Complete", f"Freed {label} across {cats} categories.", "success"
             )
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
@@ -218,28 +231,34 @@ class OptimizerApi:
 
     def pm_boost_gaming(self) -> str:
         """Quick-Boost all gaming processes to HIGH priority."""
+
         def _run():
             count = self.opt.boost_gaming_processes()
             msg = f"{count} gaming process(es) elevated to HIGH priority."
             self.notify("Gaming Boost Active", msg, "success")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
     def pm_boost_dev(self) -> str:
         """Quick-Boost all development tool processes to HIGH priority."""
+
         def _run():
             count = self.opt.boost_dev_processes_pm()
             msg = f"{count} dev tool process(es) elevated to HIGH priority."
             self.notify("Dev Boost Active", msg, "success")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
     def pm_reset_all(self) -> str:
         """Reset ALL non-system processes to NORMAL priority."""
+
         def _run():
             count = self.opt.reset_all_priorities()
             msg = f"All priorities normalized. {count} process(es) reset."
             self.notify("Priorities Reset", msg, "info")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
@@ -251,21 +270,27 @@ class OptimizerApi:
 
     def apply_privacy_settings(self, enabled_ids: list) -> str:
         """Apply tweaks for the given enabled ID list; others revert to default."""
+
         def _run():
             result = self.opt.apply_privacy_settings(enabled_ids, self.update_progress)
             self.notify(
                 "Privacy Shield Applied",
                 f"{result['applied']} private, {result['reverted']} default.",
-                "success"
+                "success",
             )
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
     def apply_privacy_profile(self, profile: str) -> str:
         """Sets all privacy toggles according to a predefined profile."""
+
         def _run():
             self.opt.apply_privacy_profile(profile, self.update_progress)
-            self.notify("Profile Active", f"{profile.upper()} privacy logic synchronized.", "success")
+            self.notify(
+                "Profile Active", f"{profile.upper()} privacy logic synchronized.", "success"
+            )
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
@@ -277,19 +302,27 @@ class OptimizerApi:
 
     def apply_advanced_tweaks(self, tweak_ids: list) -> str:
         """Batch apply advanced registry tweaks."""
+
         def _run():
             success = self.opt.apply_advanced_tweaks(tweak_ids)
             if success:
-                self.notify("Tweaks Applied", f"Successfully applied {len(tweak_ids)} advanced tweaks.", "success")
+                self.notify(
+                    "Tweaks Applied",
+                    f"Successfully applied {len(tweak_ids)} advanced tweaks.",
+                    "success",
+                )
             else:
                 self.notify("Tweak Error", "Failed to apply some tweaks. Check logs.", "error")
+
         self.opt.executor.submit(_run)
         return "STARTED"
 
     def reset_advanced_tweaks(self) -> str:
         """Reset all advanced tweaks to defaults."""
+
         def _run():
             self.opt.reset_advanced_tweaks()
             self.notify("Tweaks Reset", "All advanced tweaks restored to defaults.", "info")
+
         self.opt.executor.submit(_run)
         return "STARTED"
