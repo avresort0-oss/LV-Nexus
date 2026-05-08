@@ -16,12 +16,12 @@ Engineering Standards:
 """
 
 import json
+import logging
 import os
 import shutil
 import time
-import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from .system_utils import SystemUtils
 
@@ -63,9 +63,9 @@ class BackupManager:
 
     def __init__(self, max_versions: int = _MAX_BACKUP_VERSIONS) -> None:
         self.max_versions: int = max_versions
-        self.backup_dir: Path = Path(
-            os.environ.get("LOCALAPPDATA", Path.home())
-        ) / "LV_Nexus" / "Backups"
+        self.backup_dir: Path = (
+            Path(os.environ.get("LOCALAPPDATA", Path.home())) / "LV_Nexus" / "Backups"
+        )
         self.manifest_path: Path = self.backup_dir / self.MANIFEST_FILE
 
         try:
@@ -142,9 +142,7 @@ class BackupManager:
 
         set_dir = self.backup_dir / version_ts
         if not set_dir.exists():
-            _ui_log(
-                f"Backup set directory missing: {set_dir}", "ERR", logging.ERROR
-            )
+            _ui_log(f"Backup set directory missing: {set_dir}", "ERR", logging.ERROR)
             return False
 
         _ui_log(f"Restoring from snapshot: {version_ts}", "UNDO")
@@ -282,7 +280,11 @@ class BackupManager:
             SystemUtils.execute(f"powercfg /setactive {imported_guid}")
             _ui_log(f"Power plan restored and activated (GUID={imported_guid}).", "UNDO")
         else:
-            _ui_log("Power plan imported but GUID unparseable — activating Balanced.", "ERR", logging.WARNING)
+            _ui_log(
+                "Power plan imported but GUID unparseable — activating Balanced.",
+                "ERR",
+                logging.WARNING,
+            )
             SystemUtils.execute("powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e")
         return True
 
@@ -316,9 +318,7 @@ class BackupManager:
         except OSError as exc:
             logger.error("Manifest save failed: %s", exc)
 
-    def _update_manifest(
-        self, ts: str, results: Dict[str, bool], overall_ok: bool
-    ) -> None:
+    def _update_manifest(self, ts: str, results: Dict[str, bool], overall_ok: bool) -> None:
         """Add a new backup entry to the manifest."""
         manifest = self._load_manifest()
         versions: List[Dict] = manifest.setdefault("versions", [])
@@ -356,9 +356,7 @@ class BackupManager:
         manifest["versions"] = versions_sorted[len(versions) - self.max_versions :]
         self._save_manifest(manifest)
 
-    def _find_latest_good_version(
-        self, manifest: Dict[str, object]
-    ) -> Optional[str]:
+    def _find_latest_good_version(self, manifest: Dict[str, object]) -> Optional[str]:
         """Return the timestamp of the most recent successful backup."""
         versions = sorted(
             manifest.get("versions", []),

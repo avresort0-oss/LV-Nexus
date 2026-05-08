@@ -14,13 +14,15 @@ Engineering Standards:
   - Thread-safe static methods (no shared mutable state)
 """
 
-import os
-import sys
+from __future__ import annotations
+
 import ctypes
-import subprocess
 import logging
+import os
+import subprocess
+import sys
 import winreg
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import psutil
 
@@ -227,15 +229,11 @@ class SystemUtils:
         for path, is_once in _PATHS:
             # HKCU
             apps.extend(
-                SystemUtils._scan_reg_startup(
-                    winreg.HKEY_CURRENT_USER, path, False, is_once
-                )
+                SystemUtils._scan_reg_startup(winreg.HKEY_CURRENT_USER, path, False, is_once)
             )
             # HKLM
             apps.extend(
-                SystemUtils._scan_reg_startup(
-                    winreg.HKEY_LOCAL_MACHINE, path, True, is_once
-                )
+                SystemUtils._scan_reg_startup(winreg.HKEY_LOCAL_MACHINE, path, True, is_once)
             )
 
         # 2. Startup Folder Scan
@@ -257,9 +255,7 @@ class SystemUtils:
         return apps
 
     @staticmethod
-    def _scan_reg_startup(
-        hive, path: str, is_hklm: bool, is_once: bool
-    ) -> List[Dict[str, str]]:
+    def _scan_reg_startup(hive, path: str, is_hklm: bool, is_once: bool) -> List[Dict[str, str]]:
         """Scan a registry hive for startup entries."""
         results: List[Dict[str, str]] = []
         try:
@@ -338,9 +334,7 @@ class SystemUtils:
             logger.warning("Startup entry not found in %s: %s", hive_label, name)
             return False
         except PermissionError:
-            logger.error(
-                "Permission denied removing startup entry from %s: %s", hive_label, name
-            )
+            logger.error("Permission denied removing startup entry from %s: %s", hive_label, name)
             return False
         except OSError as exc:
             logger.error("OS error removing startup entry [%s]: %s", name, exc)
@@ -416,9 +410,9 @@ class SystemUtils:
         # Collect CPU % with a brief interval (non-blocking — first call returns 0.0)
         # We gather pids first then do a single batch.
         try:
-            proc_iter = list(psutil.process_iter(
-                ["pid", "name", "cpu_percent", "memory_info", "nice"]
-            ))
+            proc_iter = list(
+                psutil.process_iter(["pid", "name", "cpu_percent", "memory_info", "nice"])
+            )
         except Exception as exc:
             logger.error("get_process_list: iteration failed: %s", exc)
             return []
@@ -441,14 +435,16 @@ class SystemUtils:
                 except (psutil.AccessDenied, psutil.NoSuchProcess):
                     priority_label = "Normal"
 
-                processes.append({
-                    "name": name,
-                    "pid": pid,
-                    "cpu": cpu,
-                    "ram": ram_mb,
-                    "priority": priority_label,
-                    "special": name.lower() in SystemUtils.SPECIAL_APPS,
-                })
+                processes.append(
+                    {
+                        "name": name,
+                        "pid": pid,
+                        "cpu": cpu,
+                        "ram": ram_mb,
+                        "priority": priority_label,
+                        "special": name.lower() in SystemUtils.SPECIAL_APPS,
+                    }
+                )
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
             except Exception as exc:
@@ -500,9 +496,7 @@ class SystemUtils:
                 )
             else:
                 err = ctypes.get_last_error()
-                logger.warning(
-                    "SetPriorityClass failed for PID=%d, WinError=%d", pid, err
-                )
+                logger.warning("SetPriorityClass failed for PID=%d, WinError=%d", pid, err)
             return result
 
         except Exception as exc:
