@@ -150,6 +150,41 @@
             letter-spacing: 0.5px;
         }
 
+        /* Nav link tooltips - positioned to the right */
+        .nav-link[data-tooltip]::after {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(10px);
+            white-space: normal;
+            max-width: 250px;
+            background: rgba(15, 17, 26, 0.98);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+        }
+
+        .nav-link[data-tooltip]:hover::after {
+            transform: translateY(-50%) translateX(8px);
+        }
+
+        .nav-link[data-tooltip]::before {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: rgba(0, 242, 255, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10000;
+        }
+
+        .nav-link[data-tooltip]:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(-2px);
+        }
+
         .nav-link::before {
             content: '';
             position: absolute;
@@ -1328,22 +1363,22 @@
     <nav>
         <div class="logo">LV NEXUS</div>
         <div class="tagline">Next-Gen Windows Performance Architecture</div>
-        <div class="nav-link active" onclick="showSection('dashboard')">⚡ Telemetry Overview</div>
-        <div class="nav-link" onclick="showSection('process-manager')">🎯 Process Orchestration</div>
-        <div class="nav-link" onclick="showSection('privacy-shield')">🔒 Privacy & Telemetry</div>
-        <div class="nav-link" onclick="showSection('advanced-tweaks')">🛠️ Kernel Hardening</div>
-        <div class="nav-link" onclick="showSection('deep-cleaner')">🫧 System Sanitation</div>
-        <div class="nav-link" onclick="showSection('cleaner')">🧹 UWP Decoupling</div>
-        <div class="nav-link" onclick="showSection('startup')">🚀 Boot Sequence</div>
-        <div class="nav-link" onclick="showSection('backups')">🛡️ System Snapshots</div>
-        <div class="nav-link" onclick="showSection('settings')">⚙️ Engine Config</div>
-        <div style="margin-top: auto;" class="nav-link" onclick="showSection('about')">ℹ️ Platform Identity</div>
+        <div class="nav-link active" onclick="showSection('dashboard')" data-tooltip="View real-time system performance metrics">⚡ Dashboard</div>
+        <div class="nav-link" onclick="showSection('process-manager')" data-tooltip="Manage and prioritize running processes">🎯 Process Manager</div>
+        <div class="nav-link" onclick="showSection('privacy-shield')" data-tooltip="Control privacy settings and telemetry data">🔒 Privacy Shield</div>
+        <div class="nav-link" onclick="showSection('advanced-tweaks')" data-tooltip="Advanced kernel and system optimizations">🛠️ System Tweaks</div>
+        <div class="nav-link" onclick="showSection('deep-cleaner')" data-tooltip="Remove junk files and temporary data">🫧 Deep Cleaner</div>
+        <div class="nav-link" onclick="showSection('cleaner')" data-tooltip="Remove unnecessary UWP apps">🧹 App Cleaner</div>
+        <div class="nav-link" onclick="showSection('startup')" data-tooltip="Manage startup programs and boot sequence">🚀 Startup Apps</div>
+        <div class="nav-link" onclick="showSection('backups')" data-tooltip="Create and restore system backup points">🛡️ Backup & Restore</div>
+        <div class="nav-link" onclick="showSection('settings')" data-tooltip="Configure application settings and preferences">⚙️ Settings</div>
+        <div style="margin-top: auto;" class="nav-link" onclick="showSection('about')" data-tooltip="Learn more about LV Nexus">ℹ️ About</div>
     </nav>
 
     <main>
         <!-- Dashboard Section -->
         <div id="dashboard" class="section active">
-            <h1 style="margin-bottom: 25px;">System Telemetry</h1>
+            <h1 style="margin-bottom: 25px;">Dashboard - System Overview</h1>
             <!-- Thermal Mode Banner -->
             <div id="thermal-banner" class="thermal-banner cool">
                 <span style="font-size:1.8rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));"
@@ -1427,7 +1462,8 @@
 
         <!-- Process Manager Section -->
         <div id="process-manager" class="section">
-            <h1 style="margin-bottom: 6px;">Process Priority Manager</h1>
+            <h1 style="margin-bottom: 6px;">Process Manager</h1>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Easily manage and prioritize your running processes for better performance</p>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 22px;">Process Lasso-style real-time
                 priority control. ★ = Special / Highlighted apps.</p>
 
@@ -1467,9 +1503,8 @@
         <div id="deep-cleaner" class="section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;">
                 <div>
-                    <h1 style="margin-bottom: 6px;">🫧 Deep Cleaner</h1>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">BleachBit-style disk space analyzer and
-                        surgical cache cleaner.</p>
+                    <h1 style="margin-bottom: 6px;">Deep Cleaner</h1>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Scan and remove junk files, cache, and temporary data to free up disk space</p>
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button id="dc-analyze-btn" class="pm-btn" onclick="analyzeDiskUsage()"
@@ -1519,8 +1554,7 @@
         <!-- Privacy Shield Section -->
         <div id="privacy-shield" class="section">
             <h1 style="margin-bottom:6px;">Privacy Shield</h1>
-            <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:22px;">ShutUp10++ style Windows telemetry
-                & tracking disabler. A registry backup is created before every apply.</p>
+            <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:22px;">Control Windows telemetry, tracking, and privacy settings to protect your data</p>
 
             <!-- Profile Buttons -->
             <div style="display:flex;gap:12px;margin-bottom:26px;flex-wrap:wrap;">
@@ -1548,9 +1582,8 @@
         <div id="advanced-tweaks" class="section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;">
                 <div>
-                    <h1 style="margin-bottom: 6px;">Advanced System Tweaks</h1>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">Winaero Tweaker style advanced registry
-                        modifications. Handle with care.</p>
+                    <h1 style="margin-bottom: 6px;">System Tweaks</h1>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Advanced system settings and optimizations for better performance</p>
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button class="pm-btn" onclick="applyAdvancedTweaks()"
@@ -1576,9 +1609,8 @@
         <div id="cleaner" class="section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                 <div>
-                    <h1 style="margin-bottom: 5px;">System Purge</h1>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">Surgically remove UWP junk and deep-clean
-                        system caches.</p>
+                    <h1 style="margin-bottom: 5px;">App Cleaner</h1>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Remove unnecessary built-in Windows apps to free up space</p>
                 </div>
                 <button class="pm-btn" onclick="triggerDeepPurge()"
                     style="background: rgba(255, 51, 102, 0.1); border-color: var(--accent-error); color: var(--accent-error);">🧹
@@ -1614,8 +1646,7 @@
         <!-- Startup Section -->
         <div id="startup" class="section">
             <h1>Startup Manager</h1>
-            <p style="color: var(--text-muted); margin: 10px 0 20px;">Speed up boot time by disabling unnecessary
-                background applications.</p>
+            <p style="color: var(--text-muted); margin: 10px 0 20px;">Manage apps that launch when Windows starts to improve boot speed</p>
             <div class="pm-table-wrap">
                 <table id="startup-table">
                     <thead>
@@ -1633,8 +1664,8 @@
 
         <!-- Backups Section -->
         <div id="backups" class="section">
-            <h1>Restore Points</h1>
-            <p style="color: var(--text-muted); margin: 10px 0 20px;">Manage system snapshots for safety.</p>
+            <h1>Backup & Restore</h1>
+            <p style="color: var(--text-muted); margin: 10px 0 20px;">Create and manage system restore points for safety</p>
             <table id="backups-table">
                 <thead>
                     <tr>
@@ -1649,7 +1680,8 @@
 
         <!-- Settings Section -->
         <div id="settings" class="section">
-            <h1>Core Settings</h1>
+            <h1>Settings</h1>
+            <p style="color: var(--text-muted); margin: 10px 0 20px;">Configure application preferences and behavior</p>
             <div style="margin-top: 30px;">
                 <div
                     style="display: flex; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--border-glass);">
@@ -1686,6 +1718,7 @@
         <!-- About Section -->
         <div id="about" class="section">
             <h1 style="margin-bottom: 30px;">About LV Nexus</h1>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem;">Learn more about the LV Nexus performance suite</p>
             <div class="glass-panel" style="padding: 40px; text-align: center; max-width: 600px; margin: 0 auto;">
                 <h2
                     style="font-size: 2rem; background: linear-gradient(to right, #00f2ff, #7000ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 15px;">
