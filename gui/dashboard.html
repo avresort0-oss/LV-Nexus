@@ -20,6 +20,9 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --blur-strength: blur(24px);
+            --tooltip-bg: rgba(15, 17, 26, 0.98);
+            --skeleton-base: rgba(255, 255, 255, 0.03);
+            --skeleton-highlight: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -713,6 +716,146 @@
             }
         }
 
+        /* --- Loading Skeletons --- */
+        .skeleton {
+            background: linear-gradient(90deg, 
+                var(--skeleton-base) 25%, 
+                var(--skeleton-highlight) 50%, 
+                var(--skeleton-base) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        .skeleton-text {
+            height: 16px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-title {
+            height: 24px;
+            width: 60%;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-card {
+            height: 120px;
+            border-radius: 16px;
+        }
+
+        .skeleton-circle {
+            border-radius: 50%;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* --- Tooltips --- */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: var(--tooltip-bg);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        [data-tooltip]::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-4px);
+            border: 6px solid transparent;
+            border-top-color: var(--border-glass);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10000;
+        }
+
+        [data-tooltip]:hover::after,
+        [data-tooltip]:focus::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        [data-tooltip]:hover::before,
+        [data-tooltip]:focus::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        [data-tooltip-position="left"]::after {
+            left: auto;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(8px);
+        }
+
+        [data-tooltip-position="right"]::after {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(-8px);
+        }
+
+        [data-tooltip-position="bottom"]::after {
+            top: 100%;
+            bottom: auto;
+            transform: translateX(-50%) translateY(8px);
+        }
+
+        /* --- Undo Toast --- */
+        .toast.undo-toast {
+            border-left-color: #ff9900;
+        }
+
+        .toast.undo-toast .undo-btn {
+            background: rgba(255, 153, 0, 0.15);
+            border: 1px solid rgba(255, 153, 0, 0.4);
+            color: #ff9900;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .toast.undo-toast .undo-btn:hover {
+            background: rgba(255, 153, 0, 0.25);
+            border-color: #ff9900;
+        }
+
         /* --- Tables --- */
         table {
             width: 100%;
@@ -1219,39 +1362,43 @@
             </div>
 
             <div class="telemetry-grid">
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current CPU utilization percentage" data-tooltip-position="bottom">
                     <div class="tele-label">CPU Load</div>
                     <div id="cpu-val" class="tele-val">0%</div>
                 </div>
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current RAM usage percentage" data-tooltip-position="bottom">
                     <div class="tele-label">RAM Usage</div>
                     <div id="ram-val" class="tele-val">0%</div>
                 </div>
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current GPU utilization percentage" data-tooltip-position="bottom">
                     <div class="tele-label">GPU Load</div>
                     <div id="gpu-val" class="tele-val">0%</div>
                 </div>
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current disk usage percentage" data-tooltip-position="bottom">
                     <div class="tele-label">Disk Usage</div>
                     <div id="disk-val" class="tele-val">0%</div>
                 </div>
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current CPU temperature in Celsius" data-tooltip-position="bottom">
                     <div class="tele-label">CPU Temp</div>
                     <div id="temp-val" class="tele-val">0°C</div>
                 </div>
-                <div class="tele-card">
+                <div class="tele-card" data-tooltip="Current GPU temperature in Celsius" data-tooltip-position="bottom">
                     <div class="tele-label">GPU Temp</div>
                     <div id="gpu-temp-val" class="tele-val">0°C</div>
                 </div>
             </div>
 
             <div class="actions-row">
-                <div class="action-card" onclick="triggerAction('quick_boost', this)">
+                <div class="action-card" onclick="triggerAction('quick_boost', this)" 
+                     data-tooltip="Instantly frees up system resources with memory flush and cache clear" 
+                     data-tooltip-position="right">
                     <h3 style="color: var(--accent-primary);">⚡ Quick Boost</h3>
                     <p>Rapid memory flush, cache clear, and process priority hardening. Instantly frees up system
                         resources.</p>
                 </div>
-                <div class="action-card" onclick="triggerAction('deep_optimize', this)">
+                <div class="action-card" onclick="triggerAction('deep_optimize', this)"
+                     data-tooltip="Full kernel registry injection and deep system-wide performance scaling"
+                     data-tooltip-position="left">
                     <h3 style="color: var(--accent-secondary);">🔥 Master Optimize</h3>
                     <p>Full kernel registry injection, deep background sanitization, and system-wide performance
                         scaling.</p>
@@ -1261,10 +1408,18 @@
             <h2 style="margin-bottom: 15px; font-size: 1rem; color: var(--text-muted); text-transform: uppercase;">Smart
                 Profiles</h2>
             <div class="profiles-grid">
-                <div class="profile-btn" onclick="applyProfile('gaming')">Gaming</div>
-                <div class="profile-btn" onclick="applyProfile('development')">Dev</div>
-                <div class="profile-btn" onclick="applyProfile('content')">Creative</div>
-                <div class="profile-btn" onclick="applyProfile('balanced')">Eco</div>
+                <div class="profile-btn" onclick="applyProfile('gaming')" 
+                     data-tooltip="Optimized for low latency and maximum FPS in games"
+                     data-tooltip-position="bottom">🎮 Gaming</div>
+                <div class="profile-btn" onclick="applyProfile('development')"
+                     data-tooltip="Prioritizes IDEs, compilers, and dev tools"
+                     data-tooltip-position="bottom">💻 Dev</div>
+                <div class="profile-btn" onclick="applyProfile('content')"
+                     data-tooltip="Enhanced performance for video editing and rendering"
+                     data-tooltip-position="bottom">🎨 Creative</div>
+                <div class="profile-btn" onclick="applyProfile('balanced')"
+                     data-tooltip="Power-efficient mode for everyday tasks"
+                     data-tooltip-position="bottom">🌿 Eco</div>
             </div>
 
             <div class="console" id="console"></div>
@@ -1282,7 +1437,7 @@
                 <button class="pm-btn reset" id="btn-reset-all" onclick="pmResetAll()">🔄 Reset All Priorities</button>
                 <button class="pm-btn" onclick="loadProcessList()">↻ Refresh</button>
                 <input class="pm-search" id="pm-search" type="text" placeholder="Filter processes..."
-                    oninput="filterProcesses()">
+                    oninput="debouncedFilterProcesses()" data-tooltip="Type to search processes (debounced for performance)">
             </div>
 
             <div class="pm-table-wrap">
@@ -1664,15 +1819,30 @@
             console.scrollTop = console.scrollHeight;
         };
 
-        window.showToast = (title, msg, type) => {
+        window.showToast = (title, msg, type, undoCallback = null) => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'toast';
-            if (type === 'error') toast.style.borderLeftColor = 'var(--accent-error)';
-            if (type === 'success') toast.style.borderLeftColor = 'var(--accent-success)';
-            toast.innerHTML = `<strong style="color: ${type === 'error' ? 'var(--accent-error)' : type === 'success' ? 'var(--accent-success)' : 'var(--accent-primary)'}">${title}</strong><div style="font-size:0.85rem;color:var(--text-muted); line-height: 1.4;">${msg}</div>`;
+            
+            if (undoCallback) {
+                toast.className = 'toast undo-toast';
+                toast.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <strong style="color: #ff9900">${title}</strong>
+                            <div style="font-size:0.85rem;color:var(--text-muted); line-height: 1.4;">${msg}</div>
+                        </div>
+                        <button class="undo-btn" onclick="this.closest('.toast').remove(); ${undoCallback.toString().replace(/"/g, "'")}">↶ UNDO</button>
+                    </div>
+                `;
+            } else {
+                toast.className = 'toast';
+                if (type === 'error') toast.style.borderLeftColor = 'var(--accent-error)';
+                if (type === 'success') toast.style.borderLeftColor = 'var(--accent-success)';
+                toast.innerHTML = `<strong style="color: ${type === 'error' ? 'var(--accent-error)' : type === 'success' ? 'var(--accent-success)' : 'var(--accent-primary)'}">${title}</strong><div style="font-size:0.85rem;color:var(--text-muted); line-height: 1.4;">${msg}</div>`;
+            }
+            
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4800);
+            setTimeout(() => toast.remove(), undoCallback ? 8000 : 4800);
         };
 
         let _confirmCallback = null;
@@ -1718,8 +1888,10 @@
         };
 
         async function applyProfile(name) {
+            const profileNames = { gaming: 'Gaming', development: 'Development', content: 'Content Creation', balanced: 'Balanced' };
             await pywebview.api.apply_profile(name);
-            showToast("Profile Applied", `${name.toUpperCase()} performance settings engaged.`, "success");
+            showToast("Profile Applied", `${profileNames[name] || name.toUpperCase()} performance settings engaged.`, "success", 
+                () => { pywebview.api.apply_profile('balanced'); showToast('Reverted', 'Profile reverted to Balanced', 'info'); });
         }
 
         async function saveSettings() {
@@ -1748,6 +1920,17 @@
                 await pywebview.api.remove_bloatware(id);
                 showToast("Purge Queued", "Uninstall process started in background.", "info");
             });
+        }
+
+        // Skeleton loading simulation for demonstration
+        function showSkeletonLoading(elementId, duration = 1000) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.classList.add('skeleton');
+            setTimeout(() => {
+                element.classList.remove('skeleton');
+            }, duration);
         }
 
         async function loadStartup() {
@@ -1876,9 +2059,53 @@
             } catch (e) { console.error('Process list error:', e); }
         }
 
+        // --- Debounce Utility ---
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // --- Undo History Manager ---
+        const undoHistory = [];
+        const MAX_UNDO_HISTORY = 10;
+
+        function addToUndoStack(action) {
+            undoHistory.push(action);
+            if (undoHistory.length > MAX_UNDO_HISTORY) {
+                undoHistory.shift();
+            }
+        }
+
+        function showUndoToast(title, msg, undoCallback) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast undo-toast';
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <strong style="color: #ff9900">${title}</strong>
+                        <div style="font-size:0.85rem;color:var(--text-muted); line-height: 1.4;">${msg}</div>
+                    </div>
+                    <button class="undo-btn" onclick="this.closest('.toast').remove(); ${undoCallback ? 'setTimeout(() => {' + undoCallback.toString().replace(/"/g, "'") + '}, 0)' : ''}">↶ UNDO</button>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 8000);
+        }
+
         function filterProcesses() {
             renderProcessRows(_allProcesses);
         }
+
+        // Debounced search for process filtering
+        const debouncedFilterProcesses = debounce(filterProcesses, 300);
 
         async function setPriority(pid, priorityKey, selectEl) {
             if (typeof pywebview === 'undefined') return;
@@ -1897,6 +2124,8 @@
             await pywebview.api.pm_boost_gaming();
             await loadProcessList();
             document.getElementById('btn-boost-gaming').disabled = false;
+            showToast("Gaming Boost Applied", "Game processes prioritized for maximum performance", "success",
+                () => { pmResetAllDirect(); showToast('Gaming Boost Reverted', 'Priorities reset to normal', 'info'); });
         }
 
         async function pmBoostDev() {
@@ -1905,6 +2134,14 @@
             await pywebview.api.pm_boost_dev();
             await loadProcessList();
             document.getElementById('btn-boost-dev').disabled = false;
+            showToast("Dev Boost Applied", "Development tools prioritized", "success",
+                () => { pmResetAllDirect(); showToast('Dev Boost Reverted', 'Priorities reset to normal', 'info'); });
+        }
+
+        async function pmResetAllDirect() {
+            if (typeof pywebview === 'undefined') return;
+            await pywebview.api.pm_reset_all();
+            await loadProcessList();
         }
 
         function pmResetAll() {
@@ -1914,6 +2151,7 @@
                 await pywebview.api.pm_reset_all();
                 await loadProcessList();
                 document.getElementById('btn-reset-all').disabled = false;
+                showToast("Priorities Reset", "All process priorities returned to normal", "success");
             });
         }
 
